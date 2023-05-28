@@ -15,47 +15,48 @@ namespace Mars_onboarding.Pages
         private string? storelanguage;
         private string LanguageToUpdate=default!;
         private string LanguageToDelete = default!;
-        public bool LanguageDeleted;
-
-        private readonly By languageBtn = By.XPath("//a[text()='Languages']");
-        private IWebElement LanguageBtn => driver.FindElement(languageBtn);
-        
+        private readonly By LanguageBtn = By.XPath("//a[text()='Languages']");
         private static IWebElement AddNewBtn => driver.FindElement(By.XPath("//div[text()='Add New']"));
         private static IWebElement LanguageTextBox => driver.FindElement(By.XPath("//input[@placeholder='Add Language']"));
         private static IWebElement LevelDropDown => driver.FindElement(By.Name("level"));
         private static IWebElement AddBtn=> driver.FindElement(By.XPath("//input[@value='Add']"));
+        private static IWebElement CancelBtn => driver.FindElement(By.XPath("//input[@value='Cancel']"));
         private static IWebElement UpdateBtn => driver.FindElement(By.XPath("//input[@value='Update']"));
         private  IWebElement UpdateLanguageButtonIcon => driver.FindElement(By.XPath("//table[@class='ui fixed table']//td[text()='" + LanguageToUpdate + "']//following-sibling::td/span/i[@class='outline write icon']"));
         private IWebElement DeleteLanguageButtonIcon => driver.FindElement(By.XPath("//table[@class='ui fixed table']//td[text()='" + LanguageToDelete + "']//following-sibling::td/span/i[@class='remove icon']"));
         private ReadOnlyCollection<IWebElement> WebElements => driver.FindElements(AlllanguageRowColumns);
         private readonly By AlllanguageRowColumns =By.TagName("td");
-        
-        private static readonly string Alertpopuppath = "//div[@class='ns-box-inner']";
-        public static IWebElement Alertpopup =>driver.FindElement(By.XPath(Alertpopuppath));
-       public SellerLanguagePage()
+
+        public By AlertBy = By.XPath("//div[@class='ns-box-inner']");
+        public IWebElement Alertpopup => driver.FindElement(AlertBy);
+        public SellerLanguagePage()
         {
             UserLanguageCheck = false;
             wait = new(driver,new TimeSpan(0,0,100));
-            LanguageDeleted = false;
-           
         }
        public void AddLanguage(string language, string languagelevel)
         {
-            wait.Until(ExpectedConditions.ElementToBeClickable(languageBtn));
-            LanguageBtn.Click();
+            wait.Until(ExpectedConditions.ElementToBeClickable(LanguageBtn)).Click();
             storelanguage = language;
-            wait.Until(ExpectedConditions.ElementToBeClickable(AddNewBtn));
-            AddNewBtn.Click();
+            wait.Until(ExpectedConditions.ElementToBeClickable(AddNewBtn)).Click();
             LanguageTextBox.Click();
             LanguageTextBox.Clear();
             LanguageTextBox.SendKeys(language);
-            SelectElement languageleveldropdownlistbox = new(LevelDropDown);
-            languageleveldropdownlistbox.SelectByText(languagelevel);
-            wait.Until(ExpectedConditions.ElementToBeClickable(AddBtn));
-            AddBtn.Click();
-            driver.Manage().Timeouts().ImplicitWait = TimeSpan.FromSeconds(5);
-            PopLanguage = Alertpopup.Text;
-            driver.SwitchTo().ActiveElement();
+            SelectElement Languageleveldropdownlistbox = new(LevelDropDown);
+            Languageleveldropdownlistbox.SelectByText(languagelevel);
+            wait.Until(ExpectedConditions.ElementToBeClickable(AddBtn)).Click();
+            if (wait.Until(ExpectedConditions.ElementToBeClickable(AlertBy)).Text.Equals("This information is already exist."))
+            {
+                wait.Until(ExpectedConditions.ElementToBeClickable(CancelBtn)).Click();
+            }
+                
+            else
+            {
+                    driver.Manage().Timeouts().ImplicitWait = TimeSpan.FromSeconds(5);
+                    // PopLanguage = Alertpopup.Text;
+                    driver.SwitchTo().ActiveElement();
+            }
+           
         }
         public void ReturnAllElementsByLocator()
         {
@@ -65,8 +66,7 @@ namespace Mars_onboarding.Pages
         }
         public void CheckLanguageAddedToUser()
         {
-            wait.Until(ExpectedConditions.ElementIsVisible(languageBtn)).Click();
-            LanguageBtn.Click();
+            wait.Until(ExpectedConditions.ElementIsVisible(LanguageBtn)).Click();
             ReturnAllElementsByLocator();
            for (int i = 0; i < WebElements.Count; i++)
             {
@@ -82,62 +82,60 @@ namespace Mars_onboarding.Pages
         {
             CheckLanguageAddedToUser();
             UserLanguageCheck.Should().BeTrue();
-         
         }
         public void LanguageDeleteAssertion()
         {
             CheckLanguageAddedToUser();
             UserLanguageCheck.Should().BeFalse();
-
         }
 
         public void DeleteLanguage(string dellanguage)
         {
             LanguageToDelete = dellanguage;
-            wait.Until(ExpectedConditions.ElementToBeClickable(languageBtn));
-            LanguageBtn.Click();
-            ReturnAllElementsByLocator();
-            for (int i = 0; i < WebElements.Count; i++)
-            {
-                if (WebElements[i].Text.Equals(dellanguage) && i < WebElements.Count)
+            wait.Until(ExpectedConditions.ElementToBeClickable(LanguageBtn)).Click();
+           
+                ReturnAllElementsByLocator();
+                for (int i = 0; i < WebElements.Count; i++)
                 {
-                    wait.Until(ExpectedConditions.ElementToBeClickable(DeleteLanguageButtonIcon));
-                    DeleteLanguageButtonIcon.Click();
-                    driver.Manage().Timeouts().ImplicitWait = TimeSpan.FromSeconds(10);
-                    PopLanguage = Alertpopup.Text;
-                    break;
+                    if (WebElements[i].Text.Equals(dellanguage) && i < WebElements.Count)
+                    {
+                        wait.Until(ExpectedConditions.ElementToBeClickable(DeleteLanguageButtonIcon)).Click();
+                        driver.Manage().Timeouts().ImplicitWait = TimeSpan.FromSeconds(10);
+                        PopLanguage = Alertpopup.Text;
+                        break;
+                    }
                 }
-            }
             
         }
         public void UpdateLanguage(string userlanguage, string updatedlanguage, string updatelanguagelevel)
         {
-            wait.Until(ExpectedConditions.ElementToBeClickable(languageBtn));
-            LanguageBtn.Click();
+            wait.Until(ExpectedConditions.ElementToBeClickable(LanguageBtn)).Click();
             storelanguage = updatedlanguage;
             LanguageToUpdate = userlanguage;
-            ReturnAllElementsByLocator();
-
-            for (int i = 0; i < WebElements.Count; i++)
+            CheckLanguageAddedToUser();
+            if (UserLanguageCheck==false)
             {
-                driver.Manage().Timeouts().ImplicitWait = TimeSpan.FromSeconds(1000);
-                if (WebElements[i].Text.Equals(userlanguage) && i < WebElements.Count)
-                {
-                    wait.Until(ExpectedConditions.ElementToBeClickable(UpdateLanguageButtonIcon));
-                    UpdateLanguageButtonIcon.Click();
-                    LanguageTextBox.Clear();
-                    LanguageTextBox.SendKeys(updatedlanguage);
-                    SelectElement languageleveldropdownlistbox = new(LevelDropDown);
-                    languageleveldropdownlistbox.SelectByText(updatelanguagelevel);
-                    wait.Until(ExpectedConditions.ElementToBeClickable(UpdateBtn));
-                    UpdateBtn.Click();
-                    driver.Manage().Timeouts().ImplicitWait = TimeSpan.FromSeconds(10);
-                    PopLanguage = Alertpopup.Text;
-                    break;
-                }
-            }
+                ReturnAllElementsByLocator();
 
-            driver.Navigate().Refresh();
+                for (int i = 0; i < WebElements.Count; i++)
+                {
+                    driver.Manage().Timeouts().ImplicitWait = TimeSpan.FromSeconds(1000);
+                    if (WebElements[i].Text.Equals(userlanguage) && i < WebElements.Count)
+                    {
+                        wait.Until(ExpectedConditions.ElementToBeClickable(UpdateLanguageButtonIcon)).Click();
+                        LanguageTextBox.Clear();
+                        LanguageTextBox.SendKeys(updatedlanguage);
+                        SelectElement languageleveldropdownlistbox = new(LevelDropDown);
+                        languageleveldropdownlistbox.SelectByText(updatelanguagelevel);
+                        wait.Until(ExpectedConditions.ElementToBeClickable(UpdateBtn)).Click();
+                        driver.Manage().Timeouts().ImplicitWait = TimeSpan.FromSeconds(10);
+                        PopLanguage = Alertpopup.Text;
+                        break;
+                    }
+                }
+
+                driver.Navigate().Refresh();
+            }
 
         }
     }

@@ -13,21 +13,18 @@ namespace Mars.Pages
         readonly WebDriverWait wait;
         private string? StoreCertificate;
         private readonly By CertificateBtn = By.XPath("//a[text()='Certifications']");
-        private IWebElement CertificateButton => driver.FindElement(CertificateBtn);
-
         private static IWebElement AddNewBtn => driver.FindElement(By.XPath("//div[@data-tab='fourth']//th//div[@class='ui teal button ']"));
         private static IWebElement CertificateTextBox => driver.FindElement(By.XPath("//input[@placeholder='Certificate or Award']"));
         private static IWebElement CertificatefromTextBox => driver.FindElement(By.XPath("//div[@data-tab='fourth']//input[@class='received-from capitalize']"));
 
         private static IWebElement CertificateYear => driver.FindElement(By.Name("certificationYear"));
         private static IWebElement AddBtn => driver.FindElement(By.XPath("//input[@value='Add']"));
-      
+        private static IWebElement CancelBtn => driver.FindElement(By.XPath("//input[@value='Cancel']"));
         private ReadOnlyCollection<IWebElement> WebElements => driver.FindElements(AllCertificateRowColumns);
         private readonly By AllCertificateRowColumns = By.TagName("td");
-
-        private static readonly string Alertpopuppath = "//div[@class='ns-box-inner']";
-        public static IWebElement Alertpopup => driver.FindElement(By.XPath(Alertpopuppath));
-
+        public By AlertBy = By.XPath("//div[@class='ns-box-inner']");
+        public  IWebElement Alertpopup => driver.FindElement(AlertBy);
+       
         public SellerCertificatePage()
         {
             UserCertificateCheck = false;
@@ -36,24 +33,30 @@ namespace Mars.Pages
 
         public void AddCertificate(string certificate, string certificatefrom,string certificateyear)
         {
-            wait.Until(ExpectedConditions.ElementToBeClickable(CertificateBtn));
-            CertificateButton.Click();
+            wait.Until(ExpectedConditions.ElementToBeClickable(CertificateBtn)).Click();
             StoreCertificate = certificate;
-            wait.Until(ExpectedConditions.ElementToBeClickable(AddNewBtn));
-            AddNewBtn.Click();
+            wait.Until(ExpectedConditions.ElementToBeClickable(AddNewBtn)).Click();
             CertificateTextBox.Click();
             CertificateTextBox.Clear();
             CertificateTextBox.SendKeys(certificate);
             CertificatefromTextBox.Click();
             CertificatefromTextBox.Clear();
             CertificatefromTextBox.SendKeys(certificatefrom);
-            SelectElement languageleveldropdownlistbox = new(CertificateYear);
-            languageleveldropdownlistbox.SelectByText(certificateyear);
-            wait.Until(ExpectedConditions.ElementToBeClickable(AddBtn));
-            AddBtn.Click();
-            driver.Manage().Timeouts().ImplicitWait = TimeSpan.FromSeconds(5);
-            PopCertificate = Alertpopup.Text;
-            driver.SwitchTo().ActiveElement();
+            SelectElement Languageleveldropdownlistbox = new(CertificateYear);
+            Languageleveldropdownlistbox.SelectByText(certificateyear);
+            wait.Until(ExpectedConditions.ElementToBeClickable(AddBtn)).Click();
+                
+               if( wait.Until(ExpectedConditions.ElementToBeClickable(AlertBy)).Text.Equals("This information is already exist."))
+               {
+                    wait.Until(ExpectedConditions.ElementToBeClickable(CancelBtn)).Click();
+               }
+              else
+              { 
+                driver.Manage().Timeouts().ImplicitWait = TimeSpan.FromSeconds(5);
+               // PopCertificate = Alertpopup.Text;
+                driver.SwitchTo().ActiveElement();
+
+              }
         }
         public void ReturnAllElementsByLocator()
         {
@@ -67,22 +70,12 @@ namespace Mars.Pages
         public void CheckCertificateAddedToUser()
         {
             wait.Until(ExpectedConditions.ElementIsVisible(CertificateBtn)).Click();
-            CertificateButton.Click();
-
             ReturnAllElementsByLocator();
 
             for (int i = 0; i < WebElements.Count; i++)
             {
-
-                string value = WebElements[i].Text;
                 if (WebElements[i].Text.Equals(StoreCertificate))
                 {
-
-                    Console.WriteLine("value of text:>" + value);
-                    Console.WriteLine("count" + WebElements.Count);
-                    Console.WriteLine("inside forrrr webtext:>" + WebElements[i].Text);
-                    Console.WriteLine("storelanguage:>" + StoreCertificate);
-                    Console.WriteLine("i number" + i);
                     UserCertificateCheck = true;
                     break;
                 }

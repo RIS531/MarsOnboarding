@@ -8,10 +8,10 @@ namespace Mars_onboarding.Pages
 {
     public class LoginPage:Commondriver
     {
-        private readonly By signInButton = By.XPath("//a[@class='item']");
-        private readonly By emailInputBox = By.Name("email");
-        private readonly By passwordInputBox = By.Name("password");
-        private readonly By loginButton = By.XPath("//button[text()='Login']");
+        private readonly By SignInButton = By.XPath("//a[@class='item']");
+        private readonly By EmailInputBox = By.Name("email");
+        private static IWebElement PasswordInputBox => driver.FindElement(By.Name("password"));
+        private static IWebElement LoginButton => driver.FindElement(By.XPath("//button[text()='Login']"));
 
         public void LoginTasks()
         {
@@ -19,16 +19,11 @@ namespace Mars_onboarding.Pages
             
             driver.Navigate().GoToUrl("http://localhost:5000/");
             driver.Manage().Window.Maximize();
-            wait.Until(ExpectedConditions.ElementToBeClickable(signInButton));
-            driver.FindElement(signInButton).Click();
-            wait.Until(ExpectedConditions.ElementToBeClickable(emailInputBox));
-            
-            driver.FindElement(emailInputBox).Click();
-           
-            driver.FindElement(emailInputBox).SendKeys("sdzc@gmail.com");
-
-            driver.FindElement(passwordInputBox).SendKeys("1234567");
-            driver.FindElement(loginButton).Click();
+            wait.Until(ExpectedConditions.ElementToBeClickable(SignInButton)).Click();
+            wait.Until(ExpectedConditions.ElementToBeClickable(EmailInputBox)).Click();
+            driver.FindElement(EmailInputBox).SendKeys("sdzc@gmail.com");
+            PasswordInputBox.SendKeys("1234567");
+            LoginButton.Click();
         }
         
     }
